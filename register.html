@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
 </head>
 <body>
-  <h2>Register to TaskBay</h2>
+  <h2>Register</h2>
   <form onsubmit="registerUser(event)">
     <input type="text" id="username" placeholder="Username" required><br><br>
     <input type="email" id="email" placeholder="Email" required><br><br>
@@ -15,30 +15,21 @@
     <button type="submit">Register</button>
   </form>
 
-  <!-- Firebase SDKs (LOADED FIRST!) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
-
-  <script>
-    // ✅ Config
-   const firebaseConfig = {
+   <!-- Your config -->
+  <script src="firebase-config.js">const firebaConfig = {
     apiKey: "AIzaSyBxlOi2HaHOK68T8csb1xib9YK2nzQyLGg",
     authDomain: "taskbay-edf96.firebaseapp.com",
     projectId: "taskbay-edf96",
     storageBucket: "taskbay-edf96.firebasestorage.app",
     messagingSenderId: "249818604508",
     appId: "1:249818604508:web:be9aa5cc3e880d2c456519"
-    };
+    };</script>
 
-    // ✅ Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-
-    // ✅ Initialize Services
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // ✅ Register User Function
+  <script>
     async function registerUser(event) {
       event.preventDefault();
 
@@ -52,28 +43,26 @@
         const user = userCredential.user;
 
         await db.collection("users").doc(user.uid).set({
-          username: username,
-          email: email,
+          username,
+          email,
           referral: referral || null,
           points: 0,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           blocked: false
         });
 
-        // ✅ Award referral if exists
         if (referral) {
           const refDoc = await db.collection("users").doc(referral).get();
           if (refDoc.exists) {
-            const refPoints = refDoc.data().points || 0;
+            const points = refDoc.data().points || 0;
             await db.collection("users").doc(referral).update({
-              points: refPoints + 50
+              points: points + 50
             });
           }
         }
 
-        alert("Registration successful!");
+        alert("Registered successfully");
         window.location.href = "login.html";
-
       } catch (error) {
         alert("Registration failed: " + error.message);
       }
