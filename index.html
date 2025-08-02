@@ -1,13 +1,81 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-   <title>TaskBay</title> 
+  <meta charset="UTF-8">
+  <title>TaskBay - Welcome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    p {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #004d99;
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 22px;
+      }
+      p {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>welcome to TaskBay</h1>
-    <p>Earn rewards by completing simple tasks!</p>
-    <a href="login.html">login</a>
-|
-    <a herf="Register.html">Register</a>
+
+  <div class="container">
+    <h1>Welcome to TaskBay</h1>
+    <p>TaskBay is a platform where users earn rewards by completing simple tasks online. Register now and start earning today! If you already have an account, simply log in and get started.</p>
+    
+    <a href="register.html" class="btn">Register</a>
+    <a href="login.html" class="btn">Login</a>
+  </div>
+
 </body>
 </html>
