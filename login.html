@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login - TaskBay</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 40px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+    input[type="submit"] {
+      width: 100%;
+      padding: 10px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    input[type="submit"]:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Login</h2>
+    <form onsubmit="loginUser(event)">
+      <input type="email" id="login-email" placeholder="Email" required><br>
+      <input type="password" id="login-password" placeholder="Password" required><br>
+      <input type="submit" value="Login">
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+     const firebaseConfig = {
+    apiKey: "AIzaSyBxlOi2HaHOK68T8csb1xib9YK2nzQyLGg",
+    authDomain: "taskbay-edf96.firebaseapp.com",
+    projectId: "taskbay-edf96",
+    storageBucket: "taskbay-edf96.firebasestorage.app",
+    messagingSenderId: "249818604508",
+    appId: "1:249818604508:web:be9aa5cc3e880d2c456519"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    function loginUser(event) {
+      event.preventDefault();
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          alert("logged in successfull!");
+          window.location.href = "dashboard.html";
+        })
+        .catch((error) => {
+          alert("Error: " + error.message);
+        });
+    }
+
+    window.loginUser = loginUser;
+  </script>
+</body>
+</html>

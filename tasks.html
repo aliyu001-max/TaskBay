@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tasks</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .task {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .task h3 {
+      margin: 0 0 10px 0;
+    }
+    .task button {
+      padding: 8px 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .task button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <h1>Available Tasks</h1>
+  <div id="task-list">Loading tasks...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, doc, updateDoc,
+      getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+     const firebaseConfig = {
+    apiKey: "AIzaSyBxlOi2HaHOK68T8csb1xib9YK2nzQyLGg",
+    authDomain: "taskbay-edf96.firebaseapp.com",
+    projectId: "taskbay-edf96",
+    storageBucket: "taskbay-edf96.firebasestorage.app",
+    messagingSenderId: "249818604508",
+    appId: "1:249818604508:web:be9aa5cc3e880d2c456519"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const taskList = document.getElementById("task-list");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userId = user.uid;
+
+        const completedRef = doc(db, "completedTasks", userId);
+        const completedSnap = await getDoc(completedRef);
+        const completedTasks = completedSnap.exists() ? completedSnap.data() : {};
+
+        const querySnapshot = await getDocs(collection(db, "tasks"));
+        taskList.innerHTML = "";
+
+        querySnapshot.forEach((taskDoc) => {
+          const task = taskDoc.data();
+          const taskId = taskDoc.id;
+
+          if (completedTasks[taskId]) {
+            return; // Skip already completed task
+          }
+
+          const taskDiv = document.createElement("div");
+          taskDiv.className = "task";
+          taskDiv.innerHTML = `
+            <h3>${task.title}</h3>
+            <p>${task.description}</p>
+            <a href="${task.link}" target="_blank">Open Task</a><br><br>
+            <button data-id="${taskId}" data-points="${task.point}">Mark as Complete</button>
+          `;
+
+          const button = taskDiv.querySelector("button");
+          button.addEventListener("click", async () => {
+            try {
+            
+              await setDoc(completedRef, {
+                ...completedTasks,
+                [taskId]: true
+              }, { merge: true });
+
+              const userRef = doc(db, "users", userId);
+              const userSnap = await getDoc(userRef);
+              const currentPoints = userSnap.data().points || 0;
+
+              await updateDoc(userRef, {
+                points: currentPoints + parseInt(task.point)
+              });
+
+              alert("Task marked as completed and points added!");
+              taskDiv.remove();
+
+            } catch (error) {
+              console.error("Error completing task:", error);
+              alert("An error occurred while completing the task.");
+            }
+          });
+
+          taskList.appendChild(taskDiv);
+        });
+
+        if (taskList.innerHTML === "") {
+          taskList.innerHTML = "<p>No new tasks available.</p>";
+        }
+
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

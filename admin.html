@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard - TaskBay</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef;
+      padding: 20px;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Admin Dashboard</h1>
+
+  <div class="section">
+    <h2>📊 Stats Summary</h2>
+    <p>Total Users: <span id="totalUsers">0</span></p>
+    <p>Total Points: <span id="totalPoints">0</span></p>
+  </div>
+
+  <div class="section">
+    <h3>➕ Add Task</h3>
+    <input type="text" id="taskTitle" placeholder="Task Title" required />
+    <input type="text" id="taskDescription" placeholder="Task Description" required />
+    <input type="number" id="taskPoints" placeholder="Points" required />
+    <input type="text" id="taskLink" placeholder="Task Link (optional)" />
+    <button onclick="addTask()">Add Task</button>
+    <p id="taskMessage"></p>
+  </div>
+
+  <div class="section">
+    <h3>👥 Users</h3>
+    <table id="usersTable">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Points</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>📝 Tasks</h3>
+    <table id="tasksTable">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Points</th>
+          <th>Link</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Add Task
+    async function addTask() {
+      const title = document.getElementById("taskTitle").value;
+      const description = document.getElementById("taskDescription").value;
+      const points = parseInt(document.getElementById("taskPoints").value);
+      const link = document.getElementById("taskLink").value;
+
+      if (!title || !description || isNaN(points)) {
+        document.getElementById("taskMessage").innerText = "Please fill all fields.";
+        return;
+      }
+
+      await addDoc(collection(db, "tasks"), {
+        title,
+        description,
+        points,
+        link: link || null,
+        createdAt: serverTimestamp()
+      });
+
+      document.getElementById("taskMessage").innerText = "Task added successfully!";
+      document.getElementById("taskTitle").value = "";
+      document.getElementById("taskDescription").value = "";
+      document.getElementById("taskPoints").value = "";
+      document.getElementById("taskLink").value = "";
+      loadTasks();
+    }
+
+    // Load Users
+    async function loadUsers() {
+      const snapshot = await getDocs(collection(db, "users"));
+      let totalPoints = 0;
+      const table = document.querySelector("#usersTable tbody");
+      table.innerHTML = "";
+
+      snapshot.forEach((docu) => {
+        const data = docu.data();
+        totalPoints += data.points || 0;
+
+        const row = `
+          <tr>
+            <td>${data.email}</td>
+            <td>${data.points || 0}</td>
+            <td>${data.blocked ? "Blocked" : "Active"}</td>
+            <td>
+              <button onclick="toggleBlock('${docu.id}', ${data.blocked ? "false" : "true"})">${data.blocked ? "Unblock" : "Block"}</button>
+              <button onclick="deleteUser('${docu.id}')">Delete</button>
+            </td>
+          </tr>`;
+        table.innerHTML += row;
+      });
+
+      document.getElementById("totalUsers").innerText = snapshot.size;
+      document.getElementById("totalPoints").innerText = totalPoints;
+    }
+
+    // Toggle Block User
+    async function toggleBlock(userId, status) {
+      await updateDoc(doc(db, "users", userId), { blocked: status });
+      loadUsers();
+    }
+
+    // Delete User
+    async function deleteUser(userId) {
+      const confirmDelete = confirm("Delete this user?");
+      if (confirmDelete) {
+        await deleteDoc(doc(db, "users", userId));
+        loadUsers();
+      }
+    }
+
+    // Load Tasks
+    async function loadTasks() {
+      const snapshot = await getDocs(collection(db, "tasks"));
+      const table = document.querySelector("#tasksTable tbody");
+      table.innerHTML = "";
+
+      snapshot.forEach((docu) => {
+        const data = docu.data();
+        const row = `
+          <tr>
+            <td>${data.title}</td>
+            <td>${data.points}</td>
+            <td>${data.link || '-'}</td>
+            <td>
+              <button onclick="deleteTask('${docu.id}')">Delete</button>
+              <button onclick="editTask('${docu.id}', '${data.title}', ${data.points}, '${data.link}')">Edit</button>
+            </td>
+          </tr>`;
+        table.innerHTML += row;
+      });
+    }
+
+    // Delete Task
+    async function deleteTask(taskId) {
+      const confirmDelete = confirm("Delete this task?");
+      if (confirmDelete) {
+        await deleteDoc(doc(db, "tasks", taskId));
+        loadTasks();
+      }
+    }
+
+    // Edit Task
+    function editTask(taskId, title, point, link) {
+      const newTitle = prompt("New Title", title);
+      const newPoint = parseInt(prompt("New Points", point));
+      const newLink = prompt("New Link", link);
+
+      if (newTitle && newPoint) {
+        updateDoc(doc(db, "tasks", taskId), {
+          title: newTitle,
+          point: newPoint,
+          link: newLink || null
+        }).then(loadTasks);
+      }
+    }
+
+    loadUsers();
+    loadTasks();
+  </script>
+
+</body>
+</html>
