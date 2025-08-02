@@ -3,74 +3,26 @@
 <html>
 <head>
   <title>Register - TaskBay</title>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      padding: 30px;
-    }
-    .container {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    .login-link {
-      margin-top: 15px;
-      text-align: center;
-    }
-  </style>
+  <meta charset="UTF-8">
 </head>
 <body>
+  <h2>Register to TaskBay</h2>
+  <form onsubmit="registerUser(event)">
+    <input type="text" id="username" placeholder="Username" required><br><br>
+    <input type="email" id="email" placeholder="Email" required><br><br>
+    <input type="password" id="password" placeholder="Password" required><br><br>
+    <input type="text" id="referral" placeholder="Referral ID (optional)"><br><br>
+    <button type="submit">Register</button>
+  </form>
 
-  <div class="container">
-    <h2>Register to TaskBay</h2>
-    <form onsubmit="registerUser(event)">
-      <input type="text" id="username" placeholder="Username" required />
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <input type="text" id="referral" placeholder="Referral ID (optional)" />
-      <button type="submit">Register</button>
-    </form>
-    <div class="login-link">
-      Already have an account? <a href="login.html">Login</a>
-    </div>
-  </div>
-
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (LOADED FIRST!) -->
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
 
   <script>
-    const firebaseConfig = {
+    // ✅ Config
+ const firebaseConfig = {
     apiKey: "AIzaSyBxlOi2HaHOK68T8csb1xib9YK2nzQyLGg",
     authDomain: "taskbay-edf96.firebaseapp.com",
     projectId: "taskbay-edf96",
@@ -79,10 +31,14 @@
     appId: "1:249818604508:web:be9aa5cc3e880d2c456519"
     };
 
+    // ✅ Initialize Firebase
     firebase.initializeApp(firebaseConfig);
+
+    // ✅ Initialize Services
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // ✅ Register User Function
     async function registerUser(event) {
       event.preventDefault();
 
@@ -95,7 +51,6 @@
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Save user data to Firestore
         await db.collection("users").doc(user.uid).set({
           username: username,
           email: email,
@@ -105,24 +60,24 @@
           blocked: false
         });
 
-        // Reward referral if exists
+        // ✅ Award referral if exists
         if (referral) {
           const refDoc = await db.collection("users").doc(referral).get();
           if (refDoc.exists) {
-            const currentPoints = refDoc.data().points || 0;
+            const refPoints = refDoc.data().points || 0;
             await db.collection("users").doc(referral).update({
-              points: currentPoints + 50
+              points: refPoints + 50
             });
           }
         }
 
-        // Redirect to dashboard
-        window.location.href = "dashboard.html";
+        alert("Registration successful!");
+        window.location.href = "login.html";
+
       } catch (error) {
         alert("Registration failed: " + error.message);
       }
     }
   </script>
-
 </body>
 </html>
