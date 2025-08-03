@@ -4,64 +4,98 @@
 <head>
   <title>Register - TaskBay</title>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    h2 {
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-  <h2>Register</h2>
-  <form onsubmit="registerUser(event)">
-    <input type="text" id="username" placeholder="Username" required><br><br>
-    <input type="email" id="email" placeholder="Email" required><br><br>
-    <input type="password" id="password" placeholder="Password" required><br><br>
-    <input type="text" id="referral" placeholder="Referral ID (optional)"><br><br>
-    <button type="submit">Register</button>
-  </form>
+  <div class="container">
+    <h2>Register</h2>
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button onclick="registerUser()">Register</button>
+  </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
-   <!-- Your config -->
-  <script src="firebase-config.js">const firebaConfig = {
+
+  <script>
+    // Firebase config
+const firebaseConfig = {
     apiKey: "AIzaSyBxlOi2HaHOK68T8csb1xib9YK2nzQyLGg",
     authDomain: "taskbay-edf96.firebaseapp.com",
     projectId: "taskbay-edf96",
     storageBucket: "taskbay-edf96.firebasestorage.app",
     messagingSenderId: "249818604508",
     appId: "1:249818604508:web:be9aa5cc3e880d2c456519"
-    };</script>
+};
 
-  <script>
-    async function registerUser(event) {
-      event.preventDefault();
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-      const username = document.getElementById("username").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const referral = document.getElementById("referral").value;
+    // Register function
+    async function registerUser() {
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!username || !email || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
 
       try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
+        // Add user to Firestore
         await db.collection("users").doc(user.uid).set({
-          username,
-          email,
-          referral: referral || null,
+          username: username,
+          email: email,
+          uid: user.uid,
           points: 0,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          blocked: false
+          referral: null,
+          createdAt: new Date()
         });
 
-        if (referral) {
-          const refDoc = await db.collection("users").doc(referral).get();
-          if (refDoc.exists) {
-            const points = refDoc.data().points || 0;
-            await db.collection("users").doc(referral).update({
-              points: points + 50
-            });
-          }
-        }
-
-        alert("Registered successfully");
+        alert("Registration successful!");
         window.location.href = "login.html";
       } catch (error) {
         alert("Registration failed: " + error.message);
