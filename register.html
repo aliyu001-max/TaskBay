@@ -65,7 +65,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
 
   <script>
-const firebaseConfig = {
+    const firebaseConfig = {
     apiKey: "AIzaSyBxlOi2HaHOK68T8csb1xib9YK2nzQyLGg",
     authDomain: "taskbay-edf96.firebaseapp.com",
     projectId: "taskbay-edf96",
@@ -74,12 +74,10 @@ const firebaseConfig = {
     appId: "1:249818604508:web:be9aa5cc3e880d2c456519"
 };
 
-    // ✅ Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // ✅ Register function
     async function registerUser(event) {
       event.preventDefault();
 
@@ -87,11 +85,12 @@ const firebaseConfig = {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
+      console.log("Registering user...");
+
       try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Store extra info in Firestore
         await db.collection("users").doc(user.uid).set({
           username: username,
           email: email,
@@ -99,14 +98,20 @@ const firebaseConfig = {
           registeredAt: new Date()
         });
 
+        console.log("Registration successful for:", user.uid);
         alert("Registration successful!");
-        window.location.href = "login.html";
+
+        // Wait 1 second, then redirect
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1000);
+
       } catch (error) {
+        console.error("Registration failed:", error);
         alert("Registration failed: " + error.message);
       }
     }
 
-    // ✅ Attach listener after DOM is loaded
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("register-form").addEventListener("submit", registerUser);
     });
